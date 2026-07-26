@@ -4,7 +4,8 @@ export async function checkAuth() {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/me`, { credentials: 'include' });
         if (response.ok) {
-            const data = await response.json();
+            const resData = await response.json();
+            const data    = resData.data || resData;
             if (data.authenticated) {
                 state.currentUser = data;
                 return true;
@@ -35,7 +36,8 @@ export function updateAuthUI() {
 export async function login() {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/login`, { credentials: 'include' });
-        const data = await response.json();
+        const resData  = await response.json();
+        const data     = resData.data || resData;
         if (data.authorizationUrl) window.location.href = data.authorizationUrl;
     } catch (error) {
         alert('Login failed. Please try again.');
