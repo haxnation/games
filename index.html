@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haxnation Games - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#fafafa',
+                        ink: '#0b0b0b',
+                        card: '#ffffff',
+                        cyan: '#5ce1e6',
+                        danger: '#ff2a2a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="font-sans antialiased text-ink min-h-screen">
+    
+    <nav class="bg-white border-b-2 border-ink sticky top-0 z-50 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-black uppercase tracking-tighter">HAX GAMES // PLAYER</h1>
+            
+            <div id="auth-section" class="flex items-center gap-4">
+                <button id="login-btn" class="font-mono text-xs uppercase tracking-widest font-bold bg-cyan text-ink border-2 border-ink px-4 py-2 neo-shadow">
+                    AUTHORIZE
+                </button>
+                <div id="user-info" class="hidden flex items-center gap-4">
+                    <span id="user-name" class="font-mono text-sm font-bold uppercase tracking-widest"></span>
+                    <button id="logout-btn" class="font-mono text-xs uppercase tracking-widest font-bold bg-danger text-white border-2 border-ink px-4 py-2 neo-shadow">
+                        LOGOUT
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8 mt-8">
+        <div id="game-status-card" class="bg-white border-2 border-ink neo-card p-8 mb-8 hidden">
+            <h2 class="text-3xl font-black uppercase tracking-tighter mb-2">STATUS: <span id="game-state" class="text-cyan">LOADING</span></h2>
+            <div class="font-mono text-sm space-y-2 uppercase tracking-widest mt-4">
+                <p>GAME ID: <span id="game-id-display">N/A</span></p>
+                <p>YOUR TEAM: <span id="player-team" class="bg-ink text-white px-2 py-1">UNKNOWN</span></p>
+                <p>CURRENT ROOM: <span id="player-room">NONE</span></p>
+            </div>
+            
+            <div id="game-results" class="hidden mt-6 pt-6 border-t-2 border-ink">
+                <h3 class="text-2xl font-black uppercase tracking-tighter mb-2 text-danger">RESULTS</h3>
+                <div class="font-mono text-sm uppercase tracking-widest">
+                    <p class="mb-2">WINNER: <span id="result-winner" class="bg-danger text-white px-2 py-1 font-bold">TBD</span></p>
+                    <p>HUNTER SCORE: <span id="result-score" class="font-bold text-lg">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="unauth-message" class="bg-white border-2 border-ink neo-card p-8 text-center">
+            <h2 class="text-3xl font-black uppercase tracking-tighter mb-4">ACCESS DENIED</h2>
+            <p class="font-mono uppercase tracking-widest mb-6">You must authorize to view your game status.</p>
+            <button onclick="document.getElementById('login-btn').click()" class="font-mono text-sm uppercase tracking-widest font-bold bg-cyan text-ink border-2 border-ink px-6 py-3 neo-shadow">
+                INITIATE LOGIN SEQUENCE
+            </button>
+        </div>
+    </main>
+
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haxnation Games - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#fafafa',
+                        ink: '#0b0b0b',
+                        card: '#ffffff',
+                        cyan: '#5ce1e6',
+                        danger: '#ff2a2a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="font-sans antialiased text-ink min-h-screen">
+    
+    <nav class="bg-ink text-white border-b-2 border-ink sticky top-0 z-50 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-black uppercase tracking-tighter text-cyan">HAX GAMES // ADMIN OVERRIDE</h1>
+            
+            <div id="auth-section" class="flex items-center gap-4">
+                <button id="login-btn" class="font-mono text-xs uppercase tracking-widest font-bold bg-cyan text-ink border-2 border-cyan px-4 py-2 neo-shadow">
+                    AUTHORIZE
+                </button>
+                <div id="user-info" class="hidden flex items-center gap-4">
+                    <span id="user-name" class="font-mono text-sm font-bold uppercase tracking-widest"></span>
+                    <button id="logout-btn" class="font-mono text-xs uppercase tracking-widest font-bold bg-danger text-white border-2 border-danger px-4 py-2 neo-shadow">
+                        LOGOUT
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8 mt-8 hidden" id="admin-panel">
+        
+        <div class="bg-ink text-cyan neo-card p-6 mb-8 border-2 border-ink">
+            <h2 class="text-xl font-mono uppercase tracking-widest font-bold mb-4">LIVE GAME STATE</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-sm uppercase tracking-widest">
+                <div>
+                    <p class="text-gray-400">STATE</p>
+                    <p id="stat-state" class="text-xl text-white font-bold">LOADING</p>
+                </div>
+                <div>
+                    <p class="text-gray-400">PLAYERS</p>
+                    <p id="stat-players" class="text-xl text-white font-bold">0</p>
+                </div>
+                <div>
+                    <p class="text-gray-400">HUNTER SCORE</p>
+                    <p id="stat-score" class="text-xl text-white font-bold">0</p>
+                </div>
+                <div>
+                    <p class="text-gray-400">WINNER</p>
+                    <p id="stat-winner" class="text-xl text-white font-bold">N/A</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <div class="bg-white border-2 border-ink neo-card p-6">
+                <h2 class="text-2xl font-black uppercase tracking-tighter mb-4 border-b-2 border-ink pb-2">GAME CONTROL</h2>
+                <div class="flex flex-col gap-4">
+                    <button id="btn-start" class="font-mono font-bold bg-cyan text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase">START GAME (Assign Teams)</button>
+                    <button id="btn-end" class="font-mono font-bold bg-white text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase hover:bg-ink hover:text-white">END GAME (Open Scoring)</button>
+                    <button id="btn-winner" class="font-mono font-bold bg-white text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase hover:bg-ink hover:text-white">DECLARE WINNER</button>
+                    <button id="btn-reset" class="font-mono font-bold bg-danger text-white border-2 border-ink px-4 py-3 neo-shadow uppercase mt-4">RESET GAME (DANGER)</button>
+                </div>
+            </div>
+
+            <div class="bg-white border-2 border-ink neo-card p-6">
+                <h2 class="text-2xl font-black uppercase tracking-tighter mb-4 border-b-2 border-ink pb-2">ROOM SCANNER</h2>
+                <div class="flex flex-col gap-4">
+                    <input type="text" id="scan-uid" placeholder="PLAYER UUID" class="bg-white border-2 border-ink p-3 font-mono focus:outline-none focus:bg-ink focus:text-cyan focus:border-cyan transition-colors w-full">
+                    <input type="text" id="scan-room" placeholder="ROOM ID" class="bg-white border-2 border-ink p-3 font-mono focus:outline-none focus:bg-ink focus:text-cyan focus:border-cyan transition-colors w-full">
+                    
+                    <button id="btn-scan" class="font-mono font-bold bg-cyan text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase">SUBMIT SCAN</button>
+                    <button id="btn-score-room" class="font-mono font-bold bg-white text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase hover:bg-ink hover:text-white">SCORE ROOM</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 bg-white border-2 border-ink neo-card p-6">
+             <h2 class="text-2xl font-black uppercase tracking-tighter mb-4 border-b-2 border-ink pb-2">SYSTEM LOG</h2>
+             <div id="sys-log" class="font-mono text-sm bg-ink text-cyan p-4 h-48 overflow-y-auto">
+                <p>> SYSTEM INITIALIZED</p>
+             </div>
+        </div>
+
+    </main>
+
+    <div id="unauth-message" class="max-w-7xl mx-auto p-4 md:p-8 mt-8 bg-white border-2 border-ink neo-card text-center">
+        <h2 class="text-3xl font-black uppercase tracking-tighter mb-4">ADMIN ACCESS REQUIRED</h2>
+        <p class="font-mono uppercase tracking-widest mb-6">Authenticate to access override controls.</p>
+    </div>
+
+    <script type="module" src="./js/admin.js"></script>
+</body>
+</html>

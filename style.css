@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700;800&display=swap');
+
+body {
+    background-color: #fafafa;
+    color: #0b0b0b;
+    background-image: linear-gradient(#e5e7eb 1px, transparent 1px),
+                      linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+::selection {
+    background: #5ce1e6;
+    color: #0b0b0b;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #fafafa;
+    border-left: 2px solid #0b0b0b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0b0b0b;
+}
+
+.neo-shadow {
+    box-shadow: 4px 4px 0 0 #0b0b0b;
+    transition: all 0.1s ease;
+}
+
+.neo-shadow:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 #0b0b0b;
+}
+
+.neo-shadow:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+}
+
+.neo-card {
+    box-shadow: 6px 6px 0 0 #0b0b0b;
+}
