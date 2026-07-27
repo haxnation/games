@@ -31,7 +31,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadAdminData();
         setInterval(loadAdminData, 5000);
         
-        document.getElementById('roster-room-select').addEventListener('change', renderRoomRoster);
+        document.getElementById('roster-room-select').addEventListener('change', () => {
+            document.getElementById('roster-room-select').dataset.manuallySelected = 'true';
+            renderRoomRoster();
+        });
     } else {
         unauthMessage.classList.remove('hidden');
         adminPanel.classList.add('hidden');
@@ -69,6 +72,13 @@ async function loadAdminData() {
 
         currentPlayers = players;
         updateRoomDropdowns();
+
+        // Auto-select the current scanning room in the roster dropdown
+        const rosterSelect = document.getElementById('roster-room-select');
+        if (rosterSelect && !rosterSelect.dataset.manuallySelected) {
+            rosterSelect.value = `room${currentRoomNumber}`;
+        }
+
         renderRoomRoster();
     } catch (e) {
         console.error("Failed to load live data", e);
@@ -291,11 +301,16 @@ function bindAdminEvents() {
         startScanner();
     });
 
-    // --- Confirm Scan (Add to Game / Room) ---
+    // --- Shared scan submit logic ---
 
-    document.getElementById('btn-confirm-scan').addEventListener('click', async () => {
-        const uid = document.getElementById('scan-uid').value.trim();
-        if (!uid) return alert('No UUID scanned');
+    async function submitScan(rawUid) {
+        let uid = rawUid.trim();
+        if (!uid) return alert('No UUID provided');
+
+        // Extract ID from auth URL if pasted/scanned as full URL
+        if (uid.startsWith('https://auth.haxnation.org/u/')) {
+            uid = uid.split('/').pop();
+        }
 
         const currentState = document.getElementById('stat-state').textContent;
         const room = currentState === 'ended' ? `room${currentRoomNumber}` : '';
@@ -309,9 +324,28 @@ function bindAdminEvents() {
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
+    }
 
+    // --- Confirm Scan (from QR) ---
+
+    document.getElementById('btn-confirm-scan').addEventListener('click', async () => {
+        await submitScan(document.getElementById('scan-uid').value);
         // Reset scanner UI back to idle state
         document.getElementById('scan-result-ui').classList.add('hidden');
         document.getElementById('scanner-idle-view').classList.remove('hidden');
+    });
+
+    // --- Manual Submit ---
+
+    document.getElementById('btn-manual-submit').addEventListener('click', async () => {
+        await submitScan(document.getElementById('scan-uid').value);
+    });
+
+    // Also allow pressing Enter in the manual input
+    document.getElementById('scan-uid').addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            await submitScan(document.getElementById('scan-uid').value);
+        }
     });
 }
