@@ -90,10 +90,21 @@
                 <div class="bg-white border-2 border-ink neo-card p-6">
                     <h2 class="text-2xl font-black uppercase tracking-tighter mb-4 border-b-2 border-ink pb-2">ROOM SCANNER</h2>
                     <div class="flex flex-col gap-4">
-                        <button id="btn-toggle-camera" class="font-mono font-bold bg-ink text-cyan border-2 border-ink px-4 py-3 neo-shadow uppercase hover:bg-cyan hover:text-ink">TOGGLE CAMERA SCANNER</button>
-                        <div id="reader" class="w-full hidden border-2 border-ink"></div>
+                        <div id="scanner-container" class="relative bg-white border-2 border-ink">
+                            <div id="reader" class="w-full hidden"></div>
+                            <div id="scanner-idle-view" class="text-center py-8">
+                                <button id="btn-start-scanner" class="font-mono font-bold bg-ink text-cyan px-4 py-3 neo-shadow uppercase hover:bg-cyan hover:text-ink">START SCANNER</button>
+                            </div>
+                            <div id="scan-result-ui" class="hidden text-center p-4 bg-canvas border-t-2 border-ink">
+                                <p id="scan-result-text" class="font-mono font-bold text-sm mb-4">SCANNED UUID: <br><span id="scan-result-uid" class="text-danger break-all"></span></p>
+                                <div class="flex gap-2 justify-center">
+                                    <button id="btn-confirm-scan" class="font-mono text-xs font-bold bg-green-500 text-white px-4 py-2 neo-shadow uppercase">ADD TO GAME / ROOM</button>
+                                    <button id="btn-scan-again" class="font-mono text-xs font-bold bg-gray-500 text-white px-4 py-2 neo-shadow uppercase">SCAN AGAIN</button>
+                                </div>
+                            </div>
+                        </div>
 
-                        <input type="text" id="scan-uid" placeholder="PLAYER UUID" class="bg-white border-2 border-ink p-3 font-mono focus:outline-none focus:bg-ink focus:text-cyan focus:border-cyan transition-colors w-full">
+                        <input type="hidden" id="scan-uid">
                         <div class="flex items-center gap-4 bg-canvas p-4 border-2 border-ink">
                             <div class="w-1/3">
                                 <label class="font-mono text-xs text-gray-500 font-bold block mb-1">TOTAL ROOMS</label>
@@ -108,7 +119,6 @@
                             </div>
                         </div>
                         
-                        <button id="btn-scan" class="font-mono font-bold bg-cyan text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase">SUBMIT SCAN</button>
                         <button id="btn-score-room" class="font-mono font-bold bg-white text-ink border-2 border-ink px-4 py-3 neo-shadow uppercase hover:bg-ink hover:text-white">SCORE ROOM</button>
                     </div>
                 </div>

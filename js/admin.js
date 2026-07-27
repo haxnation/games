@@ -65,8 +65,8 @@ async function loadAdminData() {
         }
 
         currentPlayers = players;
+        updateRoomDropdowns();
         renderRoomRoster();
-        updateRoomDropdowns(players);
     } catch (e) {
         console.error("Failed to load live data", e);
     }
@@ -74,24 +74,29 @@ async function loadAdminData() {
 
 let currentPlayers = [];
 
-function updateRoomDropdowns(players) {
-    const rooms = new Set();
-    players.forEach(p => {
-        if (p.room) rooms.add(p.room);
-    });
-    
+function updateRoomDropdowns() {
+    const totalRoomsInput = document.getElementById('total-rooms');
+    let totalRooms = 3;
+    if (totalRoomsInput) {
+        totalRooms = parseInt(totalRoomsInput.value, 10);
+        if (isNaN(totalRooms) || totalRooms < 1) totalRooms = 1;
+    }
+
     const select = document.getElementById('roster-room-select');
+    if (!select) return;
+
     const currentVal = select.value;
     
     select.innerHTML = '<option value="">-- SELECT A ROOM --</option>';
-    rooms.forEach(r => {
+    for (let i = 1; i <= totalRooms; i++) {
+        const r = `room${i}`;
         const opt = document.createElement('option');
         opt.value = r;
-        opt.textContent = r;
+        opt.textContent = `ROOM ${i}`;
         select.appendChild(opt);
-    });
+    }
     
-    if (rooms.has(currentVal)) {
+    if (currentVal && parseInt(currentVal.replace('room', ''), 10) <= totalRooms) {
         select.value = currentVal;
     }
 }
@@ -179,6 +184,10 @@ function bindAdminEvents() {
         }
     });
 
+    document.getElementById('total-rooms').addEventListener('change', () => {
+        updateRoomDropdowns();
+    });
+
     document.getElementById('btn-next-room').addEventListener('click', () => {
         let totalRooms = parseInt(document.getElementById('total-rooms').value, 10);
         if (isNaN(totalRooms) || totalRooms < 1) totalRooms = 1;
@@ -190,7 +199,7 @@ function bindAdminEvents() {
         document.getElementById('current-room-display').textContent = currentRoomNumber;
     });
 
-    document.getElementById('btn-scan').addEventListener('click', async () => {
+    document.getElementById('btn-confirm-scan').addEventListener('click', async () => {
         const uid = document.getElementById('scan-uid').value.trim();
         const room = document.getElementById('stat-state').textContent === 'ended' ? `room${currentRoomNumber}` : '';
         if (!uid) return alert('UUID is required');
@@ -201,8 +210,13 @@ function bindAdminEvents() {
             log(`Player scanned successfully.`);
             document.getElementById('scan-uid').value = '';
             loadAdminData();
+            
+            // Automatically reset UI for next scan
+            document.getElementById('scan-result-ui').classList.add('hidden');
+            document.getElementById('scanner-idle-view').classList.remove('hidden');
         } catch (e) {
             log(`ERROR: ${e.message}`);
+            alert(`Error: ${e.message}`);
         }
     });
 
@@ -229,35 +243,55 @@ function bindAdminEvents() {
         }
     });
 
-    let html5QrcodeScanner = null;
-    document.getElementById('btn-toggle-camera').addEventListener('click', () => {
-        const reader = document.getElementById('reader');
-        if (reader.classList.contains('hidden')) {
-            reader.classList.remove('hidden');
-            if (!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-                html5QrcodeScanner.render((decodedText, decodedResult) => {
-                    log(`QR Detected: ${decodedText}`);
-                    let uid = decodedText;
-                    if (uid.startsWith('https://auth.haxnation.org/u/')) {
-                         uid = uid.split('/').pop();
-                    }
-                    document.getElementById('scan-uid').value = uid;
-                    
-                    if (html5QrcodeScanner) {
-                        html5QrcodeScanner.clear();
-                        html5QrcodeScanner = null;
-                    }
-                    reader.classList.add('hidden');
-                }, (error) => {});
-            }
-        } else {
-            reader.classList.add('hidden');
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
-                html5QrcodeScanner = null;
-            }
+    let html5QrCode = null;
+
+    const stopScanner = () => {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().catch(err => console.error("Scanner stop failed", err));
         }
+    };
+
+    const startScanner = () => {
+        stopScanner();
+        document.getElementById('scanner-idle-view').classList.add('hidden');
+        document.getElementById('scan-result-ui').classList.add('hidden');
+        document.getElementById('reader').classList.remove('hidden');
+        
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+        
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText, decodedResult) => {
+                // On Success
+                stopScanner();
+                document.getElementById('reader').classList.add('hidden');
+                
+                let uid = decodedText;
+                if (uid.startsWith('https://auth.haxnation.org/u/')) {
+                     uid = uid.split('/').pop();
+                }
+                
+                log(`QR Detected: ${uid}`);
+                document.getElementById('scan-uid').value = uid;
+                document.getElementById('scan-result-uid').textContent = uid;
+                document.getElementById('scan-result-ui').classList.remove('hidden');
+            },
+            (errorMessage) => {
+                // Ignore parse errors
+            }
+        ).catch((err) => {
+            log(`Scanner error: ${err}`);
+        });
+    };
+
+    document.getElementById('btn-start-scanner').addEventListener('click', startScanner);
+    
+    document.getElementById('btn-scan-again').addEventListener('click', () => {
+        document.getElementById('scan-uid').value = '';
+        startScanner();
     });
 
 
