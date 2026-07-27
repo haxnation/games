@@ -70,13 +70,54 @@ async function loadAdminData() {
             document.getElementById('stat-win-condition').textContent = '';
         }
 
+        // Contextual Scanner UI states
+        const instruction = document.getElementById('scanner-instruction');
+        const roomSelection = document.getElementById('room-selection-container');
+        const scoreBtn = document.getElementById('btn-score-room');
+        const scannerContainer = document.getElementById('scanner-container');
+        const manualEntryContainer = document.getElementById('scan-uid').closest('.border-t-2');
+
+        if (gameState.state === 'pending') {
+            instruction.textContent = 'SCAN TO JOIN GAME';
+            instruction.className = 'font-mono text-xs font-bold uppercase tracking-wider text-center p-2 bg-cyan text-ink border-2 border-ink';
+            roomSelection.classList.add('hidden');
+            scoreBtn.classList.add('hidden');
+            scannerContainer.classList.remove('hidden');
+            manualEntryContainer.classList.remove('hidden');
+        } else if (gameState.state === 'started') {
+            instruction.textContent = 'GAME IN PROGRESS - SCANNING DISABLED';
+            instruction.className = 'font-mono text-xs font-bold uppercase tracking-wider text-center p-2 bg-ink text-cyan border-2 border-ink';
+            roomSelection.classList.add('hidden');
+            scoreBtn.classList.add('hidden');
+            scannerContainer.classList.add('hidden');
+            manualEntryContainer.classList.add('hidden');
+        } else if (gameState.state === 'ended') {
+            instruction.textContent = 'SCAN PLAYERS INTO ROOMS';
+            instruction.className = 'font-mono text-xs font-bold uppercase tracking-wider text-center p-2 bg-danger text-white border-2 border-ink';
+            roomSelection.classList.remove('hidden');
+            scoreBtn.classList.remove('hidden');
+            scannerContainer.classList.remove('hidden');
+            manualEntryContainer.classList.remove('hidden');
+        } else if (gameState.state === 'scored') {
+            instruction.textContent = 'SCORING COMPLETE';
+            instruction.className = 'font-mono text-xs font-bold uppercase tracking-wider text-center p-2 bg-green-500 text-white border-2 border-ink';
+            roomSelection.classList.add('hidden');
+            scoreBtn.classList.add('hidden');
+            scannerContainer.classList.add('hidden');
+            manualEntryContainer.classList.add('hidden');
+        }
+
         currentPlayers = players;
         updateRoomDropdowns();
 
-        // Auto-select the current scanning room in the roster dropdown
+        // Auto-select the current scanning room/mode in the roster dropdown
         const rosterSelect = document.getElementById('roster-room-select');
         if (rosterSelect && !rosterSelect.dataset.manuallySelected) {
-            rosterSelect.value = `room${currentRoomNumber}`;
+            if (gameState.state === 'pending' || gameState.state === 'started') {
+                rosterSelect.value = 'all';
+            } else {
+                rosterSelect.value = `room${currentRoomNumber}`;
+            }
         }
 
         renderRoomRoster();
@@ -101,6 +142,12 @@ function updateRoomDropdowns() {
     const currentVal = select.value;
     
     select.innerHTML = '<option value="">-- SELECT A ROOM --</option>';
+    
+    const allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = '-- ALL PLAYERS --';
+    select.appendChild(allOpt);
+
     for (let i = 1; i <= totalRooms; i++) {
         const r = `room${i}`;
         const opt = document.createElement('option');
@@ -109,7 +156,9 @@ function updateRoomDropdowns() {
         select.appendChild(opt);
     }
     
-    if (currentVal && parseInt(currentVal.replace('room', ''), 10) <= totalRooms) {
+    if (currentVal === 'all') {
+        select.value = 'all';
+    } else if (currentVal && parseInt(currentVal.replace('room', ''), 10) <= totalRooms) {
         select.value = currentVal;
     }
 }
@@ -123,10 +172,15 @@ function renderRoomRoster() {
         return;
     }
 
-    const roomPlayers = currentPlayers.filter(p => p.room === room);
+    let roomPlayers = [];
+    if (room === 'all') {
+        roomPlayers = currentPlayers;
+    } else {
+        roomPlayers = currentPlayers.filter(p => p.room === room);
+    }
     
     if (roomPlayers.length === 0) {
-        list.innerHTML = '<p class="font-mono text-sm text-gray-500 text-center mt-8">ROOM IS EMPTY</p>';
+        list.innerHTML = `<p class="font-mono text-sm text-gray-500 text-center mt-8">${room === 'all' ? 'NO PLAYERS REGISTERED' : 'ROOM IS EMPTY'}</p>`;
         return;
     }
 
@@ -140,12 +194,19 @@ function renderRoomRoster() {
         if (p.team === 'green') teamColor = 'text-green-500';
         if (p.team === 'blue') teamColor = 'text-cyan';
 
+        const hasRoom = p.room && p.room !== "";
+        const showRemoveButton = room !== 'all' && hasRoom;
+
         item.innerHTML = `
-            <div>
-                <p class="font-mono font-bold text-sm truncate w-48">${p.user_id}</p>
-                <p class="font-mono text-xs uppercase font-bold ${teamColor}">${p.team || 'NONE'}</p>
+            <div class="flex-1 min-w-0 pr-4">
+                <p class="font-mono font-bold text-sm truncate">${p.user_id}</p>
+                <div class="flex gap-2 items-center mt-1">
+                    <span class="font-mono text-xs uppercase font-bold px-2 py-0.5 border border-ink bg-ink text-white rounded">${p.status || 'JOINED'}</span>
+                    <span class="font-mono text-xs uppercase font-bold ${teamColor}">${p.team || 'NO TEAM'}</span>
+                    ${hasRoom ? `<span class="font-mono text-xs uppercase font-bold text-gray-400">@ ${p.room}</span>` : ''}
+                </div>
             </div>
-            <button class="btn-remove font-mono text-xs font-bold bg-danger text-white px-2 py-1 uppercase" data-uid="${p.user_id}">REMOVE</button>
+            ${showRemoveButton ? `<button class="btn-remove font-mono text-xs font-bold bg-danger text-white px-2 py-1 uppercase" data-uid="${p.user_id}">REMOVE</button>` : ''}
         `;
         list.appendChild(item);
     });
@@ -176,6 +237,8 @@ function bindAdminEvents() {
             log('Starting game and assigning teams...');
             await startGame();
             log('Game started successfully.');
+            const rosterSelect = document.getElementById('roster-room-select');
+            if (rosterSelect) delete rosterSelect.dataset.manuallySelected;
             await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
@@ -187,6 +250,8 @@ function bindAdminEvents() {
             log('Ending game. Scoring now open.');
             await endGame();
             log('Game ended successfully.');
+            const rosterSelect = document.getElementById('roster-room-select');
+            if (rosterSelect) delete rosterSelect.dataset.manuallySelected;
             await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
@@ -199,6 +264,8 @@ function bindAdminEvents() {
             log('Resetting game to pending state...');
             await resetGame();
             log('Game reset successfully.');
+            const rosterSelect = document.getElementById('roster-room-select');
+            if (rosterSelect) delete rosterSelect.dataset.manuallySelected;
             await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
