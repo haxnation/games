@@ -11,6 +11,7 @@ function log(msg) {
 }
 
 let currentRoomNumber = 1;
+let currentPlayers = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('login-btn').addEventListener('click', login);
@@ -36,6 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         adminPanel.classList.add('hidden');
     }
 });
+
+// ─── DATA LOADING ────────────────────────────────────────────────────────────
 
 async function loadAdminData() {
     try {
@@ -72,7 +75,7 @@ async function loadAdminData() {
     }
 }
 
-let currentPlayers = [];
+// ─── ROOM ROSTER ─────────────────────────────────────────────────────────────
 
 function updateRoomDropdowns() {
     const totalRoomsInput = document.getElementById('total-rooms');
@@ -144,7 +147,7 @@ function renderRoomRoster() {
                 log(`Removing player ${uid} from room ${room}...`);
                 await removePlayer(uid, room);
                 log(`Player removed.`);
-                loadAdminData();
+                await loadAdminData();
             } catch (err) {
                 log(`ERROR: ${err.message}`);
             }
@@ -152,12 +155,18 @@ function renderRoomRoster() {
     });
 }
 
+// ─── ADMIN EVENTS ────────────────────────────────────────────────────────────
+
 function bindAdminEvents() {
+
+    // --- Game Control Buttons ---
+
     document.getElementById('btn-start').addEventListener('click', async () => {
         try {
             log('Starting game and assigning teams...');
             await startGame();
             log('Game started successfully.');
+            await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
@@ -168,21 +177,36 @@ function bindAdminEvents() {
             log('Ending game. Scoring now open.');
             await endGame();
             log('Game ended successfully.');
+            await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
     });
 
     document.getElementById('btn-reset').addEventListener('click', async () => {
-        if (!confirm('Are you sure you want to completely reset the game state?')) return;
+        if (!confirm('Are you sure you want to completely reset the game state? All players will be removed.')) return;
         try {
             log('Resetting game to pending state...');
             await resetGame();
             log('Game reset successfully.');
+            await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
     });
+
+    document.getElementById('btn-winner').addEventListener('click', async () => {
+        try {
+            log('Calculating winner...');
+            await declareWinner();
+            log('Winner declared successfully.');
+            await loadAdminData();
+        } catch (e) {
+            log(`ERROR: ${e.message}`);
+        }
+    });
+
+    // --- Room Controls ---
 
     document.getElementById('total-rooms').addEventListener('change', () => {
         updateRoomDropdowns();
@@ -199,27 +223,6 @@ function bindAdminEvents() {
         document.getElementById('current-room-display').textContent = currentRoomNumber;
     });
 
-    document.getElementById('btn-confirm-scan').addEventListener('click', async () => {
-        const uid = document.getElementById('scan-uid').value.trim();
-        const room = document.getElementById('stat-state').textContent === 'ended' ? `room${currentRoomNumber}` : '';
-        if (!uid) return alert('UUID is required');
-        
-        try {
-            log(`Scanning player ${uid}${room ? ' to ' + room : ''}...`);
-            await scanPlayer(uid, room);
-            log(`Player scanned successfully.`);
-            document.getElementById('scan-uid').value = '';
-            loadAdminData();
-            
-            // Automatically reset UI for next scan
-            document.getElementById('scan-result-ui').classList.add('hidden');
-            document.getElementById('scanner-idle-view').classList.remove('hidden');
-        } catch (e) {
-            log(`ERROR: ${e.message}`);
-            alert(`Error: ${e.message}`);
-        }
-    });
-
     document.getElementById('btn-score-room').addEventListener('click', async () => {
         const room = `room${currentRoomNumber}`;
         
@@ -227,21 +230,13 @@ function bindAdminEvents() {
             log(`Scoring ${room}...`);
             await scoreRoom(room);
             log(`Room scored successfully.`);
-            loadAdminData();
+            await loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
     });
 
-    document.getElementById('btn-winner').addEventListener('click', async () => {
-        try {
-            log('Calculating winner...');
-            await declareWinner();
-            log('Winner declared successfully.');
-        } catch (e) {
-            log(`ERROR: ${e.message}`);
-        }
-    });
+    // --- QR Scanner (using Html5Qrcode directly, NOT the Scanner wrapper) ---
 
     let html5QrCode = null;
 
@@ -264,8 +259,8 @@ function bindAdminEvents() {
         html5QrCode.start(
             { facingMode: "environment" },
             { fps: 10, qrbox: { width: 250, height: 250 } },
-            (decodedText, decodedResult) => {
-                // On Success
+            (decodedText) => {
+                // On success — immediately stop the scanner
                 stopScanner();
                 document.getElementById('reader').classList.add('hidden');
                 
@@ -280,10 +275,12 @@ function bindAdminEvents() {
                 document.getElementById('scan-result-ui').classList.remove('hidden');
             },
             (errorMessage) => {
-                // Ignore parse errors
+                // Ignore parse errors (frames without QR codes)
             }
         ).catch((err) => {
             log(`Scanner error: ${err}`);
+            document.getElementById('reader').classList.add('hidden');
+            document.getElementById('scanner-idle-view').classList.remove('hidden');
         });
     };
 
@@ -294,5 +291,27 @@ function bindAdminEvents() {
         startScanner();
     });
 
+    // --- Confirm Scan (Add to Game / Room) ---
 
+    document.getElementById('btn-confirm-scan').addEventListener('click', async () => {
+        const uid = document.getElementById('scan-uid').value.trim();
+        if (!uid) return alert('No UUID scanned');
+
+        const currentState = document.getElementById('stat-state').textContent;
+        const room = currentState === 'ended' ? `room${currentRoomNumber}` : '';
+        
+        try {
+            log(`Scanning player ${uid}${room ? ' to ' + room : ''}...`);
+            await scanPlayer(uid, room);
+            log(`Player scanned successfully.`);
+            document.getElementById('scan-uid').value = '';
+            await loadAdminData();
+        } catch (e) {
+            log(`ERROR: ${e.message}`);
+        }
+
+        // Reset scanner UI back to idle state
+        document.getElementById('scan-result-ui').classList.add('hidden');
+        document.getElementById('scanner-idle-view').classList.remove('hidden');
+    });
 }
