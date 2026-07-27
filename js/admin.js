@@ -200,6 +200,7 @@ function renderRoomRoster() {
         item.innerHTML = `
             <div class="flex-1 min-w-0 pr-4">
                 <p class="font-mono font-bold text-sm truncate">${p.user_id}</p>
+                ${p.name ? `<p class="font-mono text-xs text-gray-700 truncate">${p.name} &lt;${p.email || 'no-email'}&gt;</p>` : ''}
                 <div class="flex gap-2 items-center mt-1">
                     <span class="font-mono text-xs uppercase font-bold px-2 py-0.5 border border-ink bg-ink text-white rounded">${p.status || 'JOINED'}</span>
                     <span class="font-mono text-xs uppercase font-bold ${teamColor}">${p.team || 'NO TEAM'}</span>
