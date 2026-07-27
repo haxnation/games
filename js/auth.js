@@ -27,6 +27,11 @@ export function updateAuthUI() {
         if (loginBtn) loginBtn.classList.add('hidden');
         if (userInfo) userInfo.classList.remove('hidden');
         if (userName) userName.textContent = state.currentUser.name;
+        
+        const adminBtn = document.getElementById('admin-btn');
+        if (adminBtn && state.currentUser.is_admin) {
+            adminBtn.classList.remove('hidden');
+        }
     } else {
         if (loginBtn) loginBtn.classList.remove('hidden');
         if (userInfo) userInfo.classList.add('hidden');
