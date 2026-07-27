@@ -10,6 +10,8 @@ function log(msg) {
     sysLog.scrollTop = sysLog.scrollHeight;
 }
 
+let currentRoomNumber = 1;
+
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('login-btn').addEventListener('click', login);
     document.getElementById('logout-btn').addEventListener('click', logout);
@@ -177,29 +179,41 @@ function bindAdminEvents() {
         }
     });
 
+    document.getElementById('btn-next-room').addEventListener('click', () => {
+        let totalRooms = parseInt(document.getElementById('total-rooms').value, 10);
+        if (isNaN(totalRooms) || totalRooms < 1) totalRooms = 1;
+        
+        currentRoomNumber++;
+        if (currentRoomNumber > totalRooms) {
+            currentRoomNumber = 1;
+        }
+        document.getElementById('current-room-display').textContent = currentRoomNumber;
+    });
+
     document.getElementById('btn-scan').addEventListener('click', async () => {
         const uid = document.getElementById('scan-uid').value.trim();
-        const room = document.getElementById('scan-room').value.trim();
+        const room = document.getElementById('stat-state').textContent === 'ended' ? `room${currentRoomNumber}` : '';
         if (!uid) return alert('UUID is required');
         
         try {
-            log(`Scanning player ${uid} to room ${room}...`);
+            log(`Scanning player ${uid}${room ? ' to ' + room : ''}...`);
             await scanPlayer(uid, room);
             log(`Player scanned successfully.`);
             document.getElementById('scan-uid').value = '';
+            loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
     });
 
     document.getElementById('btn-score-room').addEventListener('click', async () => {
-        const room = document.getElementById('scan-room').value.trim();
-        if (!room) return alert('Room ID is required');
+        const room = `room${currentRoomNumber}`;
         
         try {
-            log(`Scoring room ${room}...`);
+            log(`Scoring ${room}...`);
             await scoreRoom(room);
             log(`Room scored successfully.`);
+            loadAdminData();
         } catch (e) {
             log(`ERROR: ${e.message}`);
         }
@@ -224,7 +238,17 @@ function bindAdminEvents() {
                 html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
                 html5QrcodeScanner.render((decodedText, decodedResult) => {
                     log(`QR Detected: ${decodedText}`);
-                    document.getElementById('scan-uid').value = decodedText;
+                    let uid = decodedText;
+                    if (uid.startsWith('https://auth.haxnation.org/u/')) {
+                         uid = uid.split('/').pop();
+                    }
+                    document.getElementById('scan-uid').value = uid;
+                    
+                    if (html5QrcodeScanner) {
+                        html5QrcodeScanner.clear();
+                        html5QrcodeScanner = null;
+                    }
+                    reader.classList.add('hidden');
                 }, (error) => {});
             }
         } else {
