@@ -53,6 +53,10 @@ export async function scoreRoom(room) {
     return apiCall(`/games/${state.currentGame}/${state.currentGameID}/score`, 'POST', { room });
 }
 
+export async function removePlayer(userId, room) {
+    return apiCall(`/games/${state.currentGame}/${state.currentGameID}/remove-player`, 'POST', { user_id: userId, room });
+}
+
 export async function declareWinner() {
     return apiCall(`/games/${state.currentGame}/${state.currentGameID}/winner`, 'POST');
 }

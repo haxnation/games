@@ -45,6 +45,13 @@ async function loadGameData() {
             resultsDiv.classList.remove('hidden');
             document.getElementById('result-score').textContent = gameState.scores.red || 0;
             
+            const totalVictims = players.filter(p => p.team === 'green').length;
+            if (totalVictims > 0) {
+                document.getElementById('result-win-condition').textContent = `POINTS TO WIN: > ${(totalVictims / 2).toFixed(1)}`;
+            } else {
+                document.getElementById('result-win-condition').textContent = '';
+            }
+
             const winnerSpan = document.getElementById('result-winner');
             if (gameState.scores.winner === 1) {
                 winnerSpan.textContent = 'RED (HUNTERS)';

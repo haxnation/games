@@ -64,7 +64,17 @@
                 <div class="font-mono text-sm uppercase tracking-widest">
                     <p class="mb-2">WINNER: <span id="result-winner" class="bg-danger text-white px-2 py-1 font-bold">TBD</span></p>
                     <p>HUNTER SCORE: <span id="result-score" class="font-bold text-lg">0</span></p>
+                    <p class="text-gray-500 mt-1" id="result-win-condition"></p>
                 </div>
+            </div>
+            
+            <div class="mt-8 bg-ink text-white p-6 neo-shadow">
+                <h3 class="text-xl font-black uppercase tracking-tighter mb-4 text-cyan border-b-2 border-cyan pb-2">GAME RULES</h3>
+                <ul class="font-mono text-sm space-y-4">
+                    <li><span class="text-danger font-bold">RED TEAM (HUNTERS):</span> Your goal is to hunt down victims. Score points by being in the same room as victims when the room is scored. You score 1 point per victim, up to the number of hunters in the room.</li>
+                    <li><span class="text-cyan font-bold">BLUE TEAM (GUARDS):</span> Your goal is to protect victims. Every guard in a room cancels out one hunter, preventing them from scoring points in that room.</li>
+                    <li><span class="text-green-500 font-bold">GREEN TEAM (VICTIMS):</span> Survive! You must coordinate with guards to ensure your rooms are protected. If hunters score more than half your total numbers, they win.</li>
+                </ul>
             </div>
         </div>
 
